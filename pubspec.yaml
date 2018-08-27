@@ -10,6 +10,7 @@ dependencies:
   synchronized: ^1.5.0+1
   http: ^0.11.3+16
   intl: ^0.15.7
+  sqflite: ^0.11.0+1
   shared_preferences: ^0.4.2
 
 dev_dependencies:
@@ -18,3 +19,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/
