@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:app/database/database.dart';
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 
 typedef T Parser<T>(Map<String, dynamic> map);
 
 typedef Map<String, dynamic> Mapifier<T>(T t);
 
-abstract class Dao<Type> {
+abstract class Dao<Type> extends ChangeNotifier {
   Dao(
     this._tableName,
     this._database,
@@ -36,6 +37,8 @@ abstract class Dao<Type> {
       _mapifier(object),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+
+    notifyListeners();
   }
 
   Future<List<Type>> query({
@@ -66,6 +69,8 @@ abstract class Dao<Type> {
       where: _where(where),
       whereArgs: _whereArgs(where),
     );
+
+    notifyListeners();
   }
 
   String _where(Map<String, dynamic> where) {

@@ -5,6 +5,7 @@ import 'package:app/inject/inject.dart';
 import 'package:app/inject/injector.dart';
 import 'package:app/models/farming_patch.dart';
 import 'package:app/widgets/patch_tracker_view.dart';
+import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 
 class PatchTrackerPage extends StatelessWidget {
@@ -33,18 +34,20 @@ class PackTrackerBody extends StatefulWidget {
 class _PackTrackerBodyState extends State<PackTrackerBody> {
   Inject _inject;
 
-  Dao<FarmingPatch> _dao;
+  Dao<FarmingPatch> _farmingPatchDao;
 
   var _patches = <FarmingPatch>[];
 
   Future<Null> _load() async {
-    final patches = await _dao.query(orderBy: 'plantedAt');
+    final patches = await _farmingPatchDao.query(orderBy: 'plantedAt');
 
     setState(() => _patches = patches);
   }
 
   void _init() {
-    _dao = _inject.get();
+    _farmingPatchDao = _inject.get();
+
+    _farmingPatchDao.addListener(_load);
 
     _load();
   }
@@ -57,6 +60,13 @@ class _PackTrackerBodyState extends State<PackTrackerBody> {
       _inject = Injector.of(context);
       _init();
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _farmingPatchDao.removeListener(_load);
   }
 
   @override
@@ -76,7 +86,7 @@ class PatchTrackers extends StatelessWidget {
 
   final List<FarmingPatch> patches;
 
-  Widget _child(BuildContext context, int index) {
+  Widget _itemBuilder(BuildContext context, int index) {
     // Default view
     Widget view = PatchTrackerView(patch: patches[index]);
 
@@ -105,7 +115,7 @@ class PatchTrackers extends StatelessWidget {
             vertical: 18.0,
             horizontal: 16.0,
           ),
-          itemBuilder: _child,
+          itemBuilder: _itemBuilder,
           itemCount: patches.length,
         ),
       ),
@@ -113,10 +123,33 @@ class PatchTrackers extends StatelessWidget {
   }
 }
 
-class TrackPatchFab extends StatelessWidget {
-  const TrackPatchFab({Key key}) : super(key: key);
+class TrackPatchFab extends StatefulWidget {
+  @override
+  State createState() => _TrackPatchFabState();
+}
 
-  void _track() {}
+class _TrackPatchFabState extends State<TrackPatchFab> {
+  Inject _inject;
+
+  Router _router;
+
+  void _track() {
+    _router.navigateTo(context, 'track/new');
+  }
+
+  void _init() {
+    _router = _inject.get();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_inject == null) {
+      _inject = Injector.of(context);
+      _init();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
