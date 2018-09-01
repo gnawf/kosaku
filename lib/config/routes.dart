@@ -1,4 +1,4 @@
-import 'package:app/pages/home_page.dart';
+import 'package:app/pages/patch_tracker_page.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -7,5 +7,5 @@ void bootstrap(Router router) {
 }
 
 Widget _home(BuildContext context, params) {
-  return HomePage();
+  return PatchTrackerPage();
 }

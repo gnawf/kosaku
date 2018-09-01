@@ -1,4 +1,5 @@
 import 'package:app/config/routes.dart' as routes;
+import 'package:app/farming/growth_calculator.dart';
 import 'package:app/inject/inject.dart';
 import 'package:app/inject/injector.dart';
 import 'package:fluro/fluro.dart';
@@ -12,10 +13,9 @@ class AppInjector extends Injector {
 }
 
 void bootstrap(Inject inject) {
-  // Router for in-app navigation
   inject.register(factory: _router, singleton: true);
-  // Http client
   inject.register(factory: _httpClient, singleton: true);
+  inject.register(factory: _growthCalculator, singleton: true);
 }
 
 Router _router(Inject inject) {
@@ -26,4 +26,8 @@ Router _router(Inject inject) {
 
 Client _httpClient(Inject inject) {
   return Client();
+}
+
+GrowthCalculator _growthCalculator(Inject inject) {
+  return GrowthCalculator();
 }
