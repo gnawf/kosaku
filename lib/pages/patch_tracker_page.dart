@@ -4,9 +4,11 @@ import 'package:app/database/dao.dart';
 import 'package:app/inject/inject.dart';
 import 'package:app/inject/injector.dart';
 import 'package:app/models/farming_patch.dart';
+import 'package:app/notifications/dismiss_notification.dart';
 import 'package:app/widgets/patch_tracker_view.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class PatchTrackerPage extends StatelessWidget {
   const PatchTrackerPage({Key key}) : super(key: key);
@@ -37,6 +39,21 @@ class _PackTrackerBodyState extends State<PackTrackerBody> {
   Dao<FarmingPatch> _farmingPatchDao;
 
   var _patches = <FarmingPatch>[];
+
+  bool _dismiss(DismissNotification notification) {
+    bool handled = false;
+
+    if (notification.what is FarmingPatch) {
+      // Optimistically remove
+      _patches.remove(notification.what);
+      // Delete from database async
+      _farmingPatchDao.delete(where: {'id': notification.what.id});
+      // Prevent notification bubbling
+      handled = true;
+    }
+
+    return handled;
+  }
 
   Future<Null> _load() async {
     final patches = await _farmingPatchDao.query(orderBy: 'plantedAt');
@@ -71,8 +88,11 @@ class _PackTrackerBodyState extends State<PackTrackerBody> {
 
   @override
   Widget build(BuildContext context) {
-    return PatchTrackers(
-      patches: _patches,
+    return NotificationListener<DismissNotification>(
+      onNotification: _dismiss,
+      child: PatchTrackers(
+        patches: _patches,
+      ),
     );
   }
 }
@@ -87,8 +107,15 @@ class PatchTrackers extends StatelessWidget {
   final List<FarmingPatch> patches;
 
   Widget _itemBuilder(BuildContext context, int index) {
-    // Default view
-    Widget view = PatchTrackerView(patch: patches[index]);
+    final patch = patches[index];
+
+    Widget view = Dismissible(
+      key: ValueKey(patch),
+      child: PatchTrackerView(patch: patch),
+      onDismissed: (DismissDirection direction) {
+        DismissNotification(what: patch).dispatch(context);
+      },
+    );
 
     // Add top padding to separate children
     if (index != 0) {
