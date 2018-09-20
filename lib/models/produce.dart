@@ -110,3 +110,26 @@ enum ProduceType {
   herb,
   special,
 }
+
+String produceTypeToString(ProduceType type) {
+  switch (type) {
+    case ProduceType.allotment:
+      return 'Allotment';
+    case ProduceType.flower:
+      return 'Flower';
+    case ProduceType.hop:
+      return 'Hop';
+    case ProduceType.bush:
+      return 'Bush';
+    case ProduceType.tree:
+      return 'Tree';
+    case ProduceType.fruitTree:
+      return 'Fruit Tree';
+    case ProduceType.herb:
+      return 'Herb';
+    case ProduceType.special:
+      return 'Special';
+  }
+
+  throw "Unhandled produce type: $type";
+}

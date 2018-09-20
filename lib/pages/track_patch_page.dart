@@ -9,25 +9,62 @@ import 'package:app/utils/consumer.dart';
 import 'package:app/widgets/produce_view.dart';
 import 'package:flutter/material.dart';
 
+typedef String TabValueToString(dynamic value);
+
 class TrackPatchPage extends StatelessWidget {
+  TrackPatchPage({
+    this.tabValues = ProduceType.values,
+    this.tabValueToString = _toString,
+  });
+
+  final List<dynamic> tabValues;
+
+  final TabValueToString tabValueToString;
+
+  List<Tab> get tabs {
+    return tabValues.map((value) {
+      String text = tabValueToString(value);
+      return Tab(text: text);
+    }).toList(growable: false);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Select Produce'),
-        elevation: 1.0,
+    return DefaultTabController(
+      length: tabValues.length,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Select Produce'),
+          elevation: 1.0,
+          bottom: TabBar(
+            tabs: tabs,
+            isScrollable: true,
+          ),
+        ),
+        body: TabBarView(
+          children: tabValues.map<Widget>((value) {
+            if (value is ProduceType) {
+              return ProduceList(filter: value);
+            } else {
+              throw "Unknown tab value: $value";
+            }
+          }).toList(growable: false),
+        ),
       ),
-      body: TrackPatchBody(),
     );
   }
 }
 
-class TrackPatchBody extends StatefulWidget {
+class ProduceList extends StatefulWidget {
+  const ProduceList({Key key, this.filter}) : super(key: key);
+
+  final ProduceType filter;
+
   @override
-  State createState() => _TrackPatchBodyState();
+  State createState() => _ProduceListState();
 }
 
-class _TrackPatchBodyState extends State<TrackPatchBody> {
+class _ProduceListState extends State<ProduceList> {
   Inject _inject;
 
   Dao<Produce> _produceDao;
@@ -55,7 +92,13 @@ class _TrackPatchBodyState extends State<TrackPatchBody> {
   }
 
   Future<Null> _load() async {
-    final produce = await _produceDao.query();
+    if (!mounted) {
+      return;
+    }
+
+    final typeOrdinal = widget.filter?.index;
+    final typeFilter = typeOrdinal == null ? null : {'type': typeOrdinal};
+    final produce = await _produceDao.query(where: typeFilter);
 
     setState(() => _produce = produce);
   }
@@ -79,12 +122,12 @@ class _TrackPatchBodyState extends State<TrackPatchBody> {
 
   @override
   Widget build(BuildContext context) {
-    return ProduceList(produce: _produce, track: _track);
+    return ProduceListView(produce: _produce, track: _track);
   }
 }
 
-class ProduceList extends StatelessWidget {
-  const ProduceList({
+class ProduceListView extends StatelessWidget {
+  const ProduceListView({
     Key key,
     @required this.produce,
     this.track,
@@ -125,5 +168,13 @@ class ProduceList extends StatelessWidget {
       itemBuilder: _itemBuilder,
       itemCount: produce.length,
     );
+  }
+}
+
+String _toString(dynamic value) {
+  if (value is ProduceType) {
+    return produceTypeToString(value);
+  } else {
+    return "$value";
   }
 }
